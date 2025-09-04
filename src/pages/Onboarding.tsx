@@ -24,6 +24,7 @@ export default function Onboarding() {
     ucla3Score: 0,
     safetyRisk: false
   });
+  const [nameError, setNameError] = useState('');
 
   const handleNext = () => {
     if (step < 4) {
@@ -77,11 +78,24 @@ export default function Onboarding() {
                 <Label htmlFor="name">What's your name?</Label>
                 <Input
                   id="name"
+                  type="text"
                   value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Only allow letters and spaces
+                    if (/^[a-zA-Z ]*$/.test(value)) {
+                      setFormData({ ...formData, name: value });
+                      setNameError('');
+                    } else {
+                      setNameError('Name must contain only letters and spaces');
+                    }
+                  }}
                   placeholder="Enter your name"
                   className="mt-2"
                 />
+                {nameError && (
+                  <span className="text-destructive text-sm">{nameError}</span>
+                )}
               </div>
               
               <div>
