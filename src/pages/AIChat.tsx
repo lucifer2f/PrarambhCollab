@@ -6,7 +6,12 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useNavigate } from 'react-router-dom';
+<<<<<<< HEAD
+import { ArrowLeft, Send, Heart, AlertTriangle } from 'lucide-react';
+import { saveInteraction, getInteractions } from '../lib/database';
+=======
 import { ArrowLeft, Send, Heart } from 'lucide-react';
+>>>>>>> main
 
 interface Message {
   id: string;
@@ -29,13 +34,72 @@ export default function AIChat() {
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [userId] = useState<string | null>(localStorage.getItem("app_user_id"));
+  const [question, setQuestion] = useState("");
+  const [answer, setAnswer] = useState("");
+  const [history, setHistory] = useState<any[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+<<<<<<< HEAD
+  useEffect(() => {
+    if (userId) {
+      (async () => {
+        const rows = await getInteractions(userId);
+        setHistory(rows);
+      })();
+    }
+  }, [userId]);
+
+  const generateAIResponse = (userMessage: string): Message => {
+    const lowerMessage = userMessage.toLowerCase();
+    
+    // Simple keyword-based responses for demo
+    let response = "I hear you. Can you tell me more about what's on your mind?";
+    let mood: 'supportive' | 'concerned' | 'encouraging' = 'supportive';
+
+    if (lowerMessage.includes('sad') || lowerMessage.includes('depressed') || lowerMessage.includes('down')) {
+      response = "I'm sorry you're feeling this way. It's okay to feel sad sometimes. Would you like to try a quick breathing exercise together, or would you prefer to talk about what's making you feel down?";
+      mood = 'concerned';
+    } else if (lowerMessage.includes('anxious') || lowerMessage.includes('worried') || lowerMessage.includes('stress')) {
+      response = "Anxiety can be really overwhelming. Let's take this one step at a time. Have you tried any grounding techniques today? I can guide you through a simple 5-4-3-2-1 exercise if you'd like.";
+      mood = 'supportive';
+    } else if (lowerMessage.includes('good') || lowerMessage.includes('great') || lowerMessage.includes('happy')) {
+      response = "That's wonderful to hear! I'm so glad you're feeling good today. What's been helping you feel this way? It's great to celebrate these positive moments. 🌟";
+      mood = 'encouraging';
+    } else if (lowerMessage.includes('tired') || lowerMessage.includes('exhausted')) {
+      response = "It sounds like you're really drained. Rest is so important for our mental health. Have you been getting enough sleep lately? Sometimes a short meditation can help us feel more refreshed too.";
+      mood = 'supportive';
+    } else if (lowerMessage.includes('alone') || lowerMessage.includes('lonely')) {
+      response = "Feeling lonely can be really hard. Remember that you're not truly alone - I'm here with you, and there are people who care about you. Would you like to talk about what's making you feel this way?";
+      mood = 'concerned';
+    } else if (lowerMessage.includes('help') || lowerMessage.includes('support')) {
+      response = "I'm here to help in whatever way I can. If you're looking for professional support, I can help you find resources. For now, I'm here to listen and support you. What kind of help do you need?";
+      mood = 'supportive';
+    }
+
+    // Crisis detection - simplified for demo
+    if (lowerMessage.includes('hurt myself') || lowerMessage.includes('suicide') || lowerMessage.includes('end it all')) {
+      response = "I'm very concerned about you right now. Please know that you matter and there are people who want to help. I strongly encourage you to reach out to a crisis hotline: 988 (Suicide & Crisis Lifeline). Would you like me to help you find immediate professional support?";
+      mood = 'concerned';
+    }
+
+    return {
+      id: Date.now().toString(),
+      text: response,
+      sender: 'ai',
+      timestamp: new Date(),
+      mood
+    };
+  };
+
+  const handleSendMessage = () => {
+=======
   const handleSend = () => {
+>>>>>>> main
     if (!inputValue.trim()) return;
     const userMsg: Message = {
       id: Date.now().toString(),
@@ -60,6 +124,18 @@ export default function AIChat() {
       setIsTyping(false);
     }, 1200);
   };
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!userId) return alert("Create a user first (Onboarding).");
+    // Save the Q&A pair
+    await saveInteraction(userId, question, answer);
+    setQuestion("");
+    setAnswer("");
+    // refresh list
+    const rows = await getInteractions(userId);
+    setHistory(rows);
+  }
 
   return (
     <Layout background="gradient">
@@ -108,6 +184,56 @@ export default function AIChat() {
             </button>
           </form>
         </Card>
+<<<<<<< HEAD
+
+        {/* Input Area */}
+        <div className="flex gap-2">
+          <Input
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Share what's on your mind..."
+            className="flex-1 rounded-2xl"
+            disabled={isTyping}
+          />
+          <WellnessButton
+            onClick={handleSendMessage}
+            disabled={!inputValue.trim() || isTyping}
+            size="icon"
+            className="rounded-2xl"
+          >
+            <Send className="w-4 h-4" />
+          </WellnessButton>
+        </div>
+
+        {/* Safety Notice */}
+        <div className="mt-4 p-3 bg-muted/30 rounded-xl">
+          <p className="text-xs text-muted-foreground text-center">
+            <AlertTriangle className="w-3 h-3 inline mr-1" />
+            MindPal provides support but not medical advice. In crisis, contact 988 or your local emergency services.
+          </p>
+        </div>
+
+        {/* History Section - Moved here for better structure */}
+        <div className="mt-6">
+          <h3 className="text-lg font-semibold mb-4">Chat History</h3>
+          <Card className="p-4 shadow-soft border-0">
+            <ScrollArea className="h-60">
+              <ul className="space-y-2">
+                {history.map((h) => (
+                  <li key={h.id} className="flex gap-2">
+                    <div className="flex-1 rounded-2xl px-4 py-2 bg-muted">
+                      <p className="text-sm font-medium">{h.question}</p>
+                      <p className="text-sm text-muted-foreground">{h.answer}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </ScrollArea>
+          </Card>
+        </div>
+=======
+>>>>>>> main
       </Container>
     </Layout>
   );
