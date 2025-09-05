@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useNavigate } from 'react-router-dom';
 import { Heart, Clock, Shield, Phone } from 'lucide-react';
 import { createUser, getAuthUserId } from '../lib/database';
+import { supabase } from '../lib/supabaseClient';
 
 export default function Onboarding() {
   // Wellness assessment questions
@@ -80,11 +81,11 @@ export default function Onboarding() {
   const StepIndicator = () => (
     <div className="flex justify-center mb-8">
       <div className="flex gap-2">
-        {[1, 2, 3, 4].map((i) => (
+        {[1, 2, 3, 4].map((_, idx) => (
           <div
-            key={i}
+            key={idx}
             className={`w-3 h-3 rounded-full transition-all ${
-              i <= step ? 'bg-primary' : 'bg-muted'
+              idx + 1 <= step ? 'bg-primary' : 'bg-muted'
             }`}
           />
         ))}
@@ -102,6 +103,25 @@ export default function Onboarding() {
       localStorage.setItem('app_user_id', user.id);
       console.log('User row created:', user);
     }
+  }
+
+  async function saveUserData(name: string, role: string, freeTime: string) {
+    const { data, error, status } = await supabase
+      .from('users')
+      .insert([{ name, role, free_time: freeTime }])
+      .select();
+
+    console.log('Insert status:', status);
+    if (error) {
+      console.error('Error saving user:', error);
+    } else {
+      console.log('Saved user:', data);
+    }
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    saveUserData(formData.name, formData.role, formData.freeTimeFrom + '-' + formData.freeTimeTo);
   }
 
   return (
@@ -241,14 +261,17 @@ export default function Onboarding() {
             </div>
             
             <WellnessButton 
-              onClick={() => {
+              onClick={async () => {
                 // Validate that from < to
                 if (formData.freeTimeFrom && formData.freeTimeTo && formData.freeTimeFrom >= formData.freeTimeTo) {
                   setFreeTimeError('Start time must be before end time');
                   return;
                 }
                 setFreeTimeError('');
-                handleNext();
+                // Save user data to Supabase
+                await saveUserData(formData.name, formData.role, formData.freeTimeFrom + '-' + formData.freeTimeTo);
+                // Then go to next step
+                setStep(step + 1);
               }}
               disabled={
                 !formData.workingHours ||
