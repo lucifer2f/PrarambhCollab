@@ -52,7 +52,7 @@ export default function Onboarding() {
           <div
             key={i}
             className={`w-3 h-3 rounded-full transition-all ${
-              i <= step ? 'bg-primary' : 'bg-muted'
+              i <= step ? 'bg-blue-600' : 'bg-gray-300'
             }`}
           />
         ))}
@@ -62,17 +62,13 @@ export default function Onboarding() {
 
   return (
     <Layout background="gradient">
-      <Container>
-        <StepIndicator />
-        
-        {step === 1 && (
-          <Card className="p-8 shadow-soft border-0">
-            <div className="text-center mb-8">
-              <Heart className="w-16 h-16 text-primary mx-auto mb-4" />
-              <h1 className="text-3xl font-bold mb-2">Welcome to MindPal</h1>
-              <p className="text-muted-foreground">Let's get to know you better so we can provide personalized support</p>
-            </div>
-            
+      <Container className="max-w-lg mx-auto">
+        <Card className="p-8 mt-10 mb-8 shadow-md border-0 rounded-2xl bg-white">
+          <StepIndicator />
+          <h2 className="text-2xl font-bold mb-2 text-center text-blue-700">Onboarding</h2>
+          <p className="text-gray-500 mb-6 text-center">Let's get to know you and personalize your experience.</p>
+          
+          {step === 1 && (
             <div className="space-y-6">
               <div>
                 <Label htmlFor="name">What's your name?</Label>
@@ -116,25 +112,9 @@ export default function Onboarding() {
                 </RadioGroup>
               </div>
             </div>
-            
-            <WellnessButton 
-              onClick={handleNext}
-              disabled={!formData.name || !formData.role}
-              className="w-full mt-8"
-            >
-              Continue
-            </WellnessButton>
-          </Card>
-        )}
+          )}
 
-        {step === 2 && (
-          <Card className="p-8 shadow-soft border-0">
-            <div className="text-center mb-8">
-              <Clock className="w-16 h-16 text-primary mx-auto mb-4" />
-              <h2 className="text-2xl font-bold mb-2">Your Schedule</h2>
-              <p className="text-muted-foreground">Help us understand your daily routine</p>
-            </div>
-            
+          {step === 2 && (
             <div className="space-y-6">
               <div>
                 <Label htmlFor="workingHours">How many hours do you work/study daily?</Label>
@@ -159,25 +139,9 @@ export default function Onboarding() {
                 />
               </div>
             </div>
-            
-            <WellnessButton 
-              onClick={handleNext}
-              disabled={!formData.workingHours || !formData.freeTime}
-              className="w-full mt-8"
-            >
-              Continue
-            </WellnessButton>
-          </Card>
-        )}
+          )}
 
-        {step === 3 && (
-          <Card className="p-8 shadow-soft border-0">
-            <div className="text-center mb-8">
-              <Phone className="w-16 h-16 text-primary mx-auto mb-4" />
-              <h2 className="text-2xl font-bold mb-2">Emergency Contact</h2>
-              <p className="text-muted-foreground">Someone we can reach if you need urgent support</p>
-            </div>
-            
+          {step === 3 && (
             <div className="space-y-6">
               <div>
                 <Label htmlFor="emergencyName">Contact person's name</Label>
@@ -209,85 +173,48 @@ export default function Onboarding() {
                 </p>
               </div>
             </div>
-            
-            <WellnessButton 
-              onClick={handleNext}
-              disabled={!formData.emergencyName || !formData.emergencyContact}
-              className="w-full mt-8"
-            >
-              Continue
-            </WellnessButton>
-          </Card>
-        )}
+          )}
 
-        {step === 4 && (
-          <Card className="p-8 shadow-soft border-0">
-            <div className="text-center mb-8">
-              <Shield className="w-16 h-16 text-primary mx-auto mb-4" />
-              <h2 className="text-2xl font-bold mb-2">Wellness Assessment</h2>
-              <p className="text-muted-foreground">Quick questions to understand how you're feeling</p>
-            </div>
-            
+          {step === 4 && (
             <div className="space-y-6">
-              <div className="bg-gradient-safe p-6 rounded-xl">
-                <h3 className="font-semibold mb-4">How often have you felt down or hopeless recently?</h3>
+              <div className="rounded-2xl p-6 mb-4 bg-blue-50">
+                <Label className="font-semibold mb-2 block">How often have you felt down or hopeless recently?</Label>
                 <RadioGroup
                   value={formData.phq9Score.toString()}
-                  onValueChange={(value) => setFormData({...formData, phq9Score: parseInt(value)})}
+                  onValueChange={val => setFormData(f => ({ ...f, phq9Score: Number(val) }))}
                 >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="0" id="phq0" />
-                    <Label htmlFor="phq0">Not at all</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="5" id="phq5" />
-                    <Label htmlFor="phq5">Several days</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="10" id="phq10" />
-                    <Label htmlFor="phq10">More than half the days</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="15" id="phq15" />
-                    <Label htmlFor="phq15">Nearly every day</Label>
-                  </div>
+                  <div className="flex items-center gap-2 mb-1"><RadioGroupItem value="0" id="phq9-0" /><Label htmlFor="phq9-0">Not at all</Label></div>
+                  <div className="flex items-center gap-2 mb-1"><RadioGroupItem value="1" id="phq9-1" /><Label htmlFor="phq9-1">Several days</Label></div>
+                  <div className="flex items-center gap-2 mb-1"><RadioGroupItem value="2" id="phq9-2" /><Label htmlFor="phq9-2">More than half the days</Label></div>
+                  <div className="flex items-center gap-2"><RadioGroupItem value="3" id="phq9-3" /><Label htmlFor="phq9-3">Nearly every day</Label></div>
                 </RadioGroup>
               </div>
-
-              <div className="bg-gradient-safe p-6 rounded-xl">
-                <h3 className="font-semibold mb-4">How often do you feel anxious or worried?</h3>
+              <div className="rounded-2xl p-6 bg-blue-50">
+                <Label className="font-semibold mb-2 block">How often do you feel anxious or worried?</Label>
                 <RadioGroup
                   value={formData.gad7Score.toString()}
-                  onValueChange={(value) => setFormData({...formData, gad7Score: parseInt(value)})}
+                  onValueChange={val => setFormData(f => ({ ...f, gad7Score: Number(val) }))}
                 >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="0" id="gad0" />
-                    <Label htmlFor="gad0">Not at all</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="5" id="gad5" />
-                    <Label htmlFor="gad5">Several days</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="10" id="gad10" />
-                    <Label htmlFor="gad10">More than half the days</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="15" id="gad15" />
-                    <Label htmlFor="gad15">Nearly every day</Label>
-                  </div>
+                  <div className="flex items-center gap-2 mb-1"><RadioGroupItem value="0" id="gad7-0" /><Label htmlFor="gad7-0">Not at all</Label></div>
+                  <div className="flex items-center gap-2 mb-1"><RadioGroupItem value="1" id="gad7-1" /><Label htmlFor="gad7-1">Several days</Label></div>
+                  <div className="flex items-center gap-2 mb-1"><RadioGroupItem value="2" id="gad7-2" /><Label htmlFor="gad7-2">More than half the days</Label></div>
+                  <div className="flex items-center gap-2"><RadioGroupItem value="3" id="gad7-3" /><Label htmlFor="gad7-3">Nearly every day</Label></div>
                 </RadioGroup>
               </div>
             </div>
-            
-            <WellnessButton 
-              onClick={handleNext}
-              className="w-full mt-8"
-            >
-              Complete Assessment
+          )}
+          
+          <div className="flex justify-between mt-8">
+            {step > 1 && (
+              <WellnessButton variant="outline" className="border-blue-400 text-blue-700 hover:bg-blue-50 focus:ring-2 focus:ring-blue-300" onClick={() => setStep(step - 1)}>
+                Back
+              </WellnessButton>
+            )}
+            <WellnessButton className="bg-blue-600 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-400 ml-auto" onClick={handleNext}>
+              {step < 4 ? 'Next' : 'Finish'}
             </WellnessButton>
-          </Card>
-        )}
+          </div>
+        </Card>
       </Container>
     </Layout>
   );
