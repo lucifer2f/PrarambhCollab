@@ -4,7 +4,7 @@ import { WellnessButton } from '@/components/WellnessButton';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Play, Pause, RotateCcw, CheckCircle } from 'lucide-react';
+import { Play, Pause, RotateCcw, CheckCircle } from 'lucide-react';
 
 export default function MeditationChallenge() {
   const navigate = useNavigate();
@@ -17,8 +17,7 @@ export default function MeditationChallenge() {
   const progress = ((totalTime - timeLeft) / totalTime) * 100;
 
   useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
-
+    let interval = null;
     if (isActive && timeLeft > 0) {
       interval = setInterval(() => {
         setTimeLeft(time => {
@@ -33,7 +32,6 @@ export default function MeditationChallenge() {
     } else if (timeLeft === 0) {
       setIsCompleted(true);
     }
-
     return () => {
       if (interval) clearInterval(interval);
     };
@@ -43,181 +41,61 @@ export default function MeditationChallenge() {
     setSessionStarted(true);
     setIsActive(true);
   };
-
-  const pauseSession = () => {
-    setIsActive(false);
-  };
-
+  const pauseSession = () => setIsActive(false);
   const resetSession = () => {
     setIsActive(false);
     setTimeLeft(300);
     setIsCompleted(false);
     setSessionStarted(false);
   };
-
-  const formatTime = (seconds: number) => {
+  const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const getGuidanceText = () => {
-    const remainingMinutes = Math.ceil(timeLeft / 60);
-    
-    if (!sessionStarted) {
-      return "Ready to begin your mindfulness journey? This 5-minute session will help you center yourself and find inner calm.";
-    }
-    
-    if (isCompleted) {
-      return "Beautiful work! You've completed your meditation session. Take a moment to notice how you feel.";
-    }
-
-    if (remainingMinutes === 5) {
-      return "Close your eyes and take a deep breath. Let your body relax and your mind settle.";
-    } else if (remainingMinutes === 4) {
-      return "Focus on your breath. Notice the air flowing in and out of your body naturally.";
-    } else if (remainingMinutes === 3) {
-      return "If your mind wanders, that's perfectly normal. Gently bring your attention back to your breath.";
-    } else if (remainingMinutes === 2) {
-      return "Feel your body becoming more relaxed with each breath. You're doing wonderfully.";
-    } else {
-      return "Almost there. Stay present with this moment and continue breathing mindfully.";
-    }
-  };
-
   return (
-    <Layout background="gradient" className="min-h-screen">
-      <Container className="max-w-lg">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <WellnessButton 
-            variant="ghost" 
-            size="icon"
-            onClick={() => navigate('/dashboard')}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </WellnessButton>
-          <h1 className="text-2xl font-bold">Mindful Breathing</h1>
-        </div>
-
-        {/* Main Session Card */}
-        <Card className="p-8 text-center shadow-soft border-0 mb-6">
-          {/* Timer Circle */}
-          <div className="relative w-48 h-48 mx-auto mb-8">
-            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-              {/* Background circle */}
-              <circle
-                cx="50"
-                cy="50"
-                r="45"
-                stroke="hsl(var(--muted))"
-                strokeWidth="8"
-                fill="none"
-              />
-              {/* Progress circle */}
-              <circle
-                cx="50"
-                cy="50"
-                r="45"
-                stroke="hsl(var(--wellness-calm))"
-                strokeWidth="8"
-                fill="none"
-                strokeLinecap="round"
-                strokeDasharray={`${2 * Math.PI * 45}`}
-                strokeDashoffset={`${2 * Math.PI * 45 * (1 - progress / 100)}`}
-                className="transition-all duration-1000 ease-in-out"
-              />
-            </svg>
-            
-            {/* Timer Display */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center">
-                {isCompleted ? (
-                  <CheckCircle className="w-12 h-12 text-wellness-safe mx-auto" />
-                ) : (
-                  <span className="text-3xl font-mono font-bold text-primary">
-                    {formatTime(timeLeft)}
-                  </span>
-                )}
+    <Layout background="gradient">
+      <Container className="max-w-md mx-auto">
+        <Card className="p-8 mt-10 mb-8 shadow-md border-0 rounded-2xl bg-white flex flex-col items-center">
+          <h2 className="text-2xl font-bold mb-2 text-center text-blue-700">Meditation Challenge</h2>
+          <p className="text-gray-500 mb-6 text-center">Take 5 minutes to relax, breathe, and focus on your well-being.</p>
+          <div className="w-full flex flex-col items-center mb-6">
+            <Progress value={progress} className="mb-4 bg-blue-100 h-3 rounded-full" />
+            <div className="text-4xl font-mono text-blue-600 mb-2">{formatTime(timeLeft)}</div>
+            {isCompleted && (
+              <div className="flex items-center gap-2 text-green-600 font-semibold mb-2">
+                <CheckCircle className="w-5 h-5" /> Session Complete!
               </div>
-            </div>
+            )}
           </div>
-
-          {/* Guidance Text */}
-          <div className="mb-8">
-            <p className="text-muted-foreground leading-relaxed max-w-sm mx-auto">
-              {getGuidanceText()}
-            </p>
-          </div>
-
-          {/* Controls */}
-          <div className="flex justify-center gap-4">
-            {!sessionStarted && !isCompleted && (
-              <WellnessButton onClick={startSession} size="lg">
-                <Play className="w-5 h-5 mr-2" />
-                Begin Session
+          <div className="flex gap-4 mb-4">
+            {!sessionStarted && (
+              <WellnessButton onClick={startSession} className="bg-blue-600 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-400">
+                <Play className="w-5 h-5 mr-2" /> Start
               </WellnessButton>
             )}
-
             {sessionStarted && !isCompleted && (
               <>
-                <WellnessButton
-                  variant={isActive ? "outline" : "primary"}
-                  onClick={isActive ? pauseSession : () => setIsActive(true)}
-                  size="lg"
-                >
-                  {isActive ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-                </WellnessButton>
-                
-                <WellnessButton variant="ghost" onClick={resetSession}>
-                  <RotateCcw className="w-5 h-5" />
+                {isActive ? (
+                  <WellnessButton onClick={pauseSession} className="bg-yellow-400 text-white hover:bg-yellow-500 focus:ring-2 focus:ring-yellow-300">
+                    <Pause className="w-5 h-5 mr-2" /> Pause
+                  </WellnessButton>
+                ) : (
+                  <WellnessButton onClick={startSession} className="bg-blue-600 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-400">
+                    <Play className="w-5 h-5 mr-2" /> Resume
+                  </WellnessButton>
+                )}
+                <WellnessButton onClick={resetSession} className="bg-gray-200 text-gray-700 hover:bg-gray-300 focus:ring-2 focus:ring-gray-300">
+                  <RotateCcw className="w-5 h-5 mr-2" /> Reset
                 </WellnessButton>
               </>
             )}
-
-            {isCompleted && (
-              <div className="space-y-4">
-                <WellnessButton variant="primary" size="lg" onClick={() => navigate('/dashboard')}>
-                  Continue to Dashboard
-                </WellnessButton>
-                <WellnessButton variant="outline" onClick={resetSession}>
-                  Try Again
-                </WellnessButton>
-              </div>
-            )}
           </div>
+          <WellnessButton onClick={() => navigate('/dashboard')} variant="outline" className="w-full mt-2 border-blue-400 text-blue-700 hover:bg-blue-50 focus:ring-2 focus:ring-blue-300">
+            Back to Dashboard
+          </WellnessButton>
         </Card>
-
-        {/* Session Info */}
-        {sessionStarted && !isCompleted && (
-          <Card className="p-4 shadow-gentle border-0 bg-wellness-calm/5">
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-2">
-                🔒 <strong>Focus Mode Active</strong>
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Stay present. Exiting early will mark this session as incomplete.
-              </p>
-            </div>
-          </Card>
-        )}
-
-        {/* Completion Card */}
-        {isCompleted && (
-          <Card className="p-6 shadow-soft border-0 bg-gradient-safe">
-            <div className="text-center text-white">
-              <CheckCircle className="w-12 h-12 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold mb-2">Well Done! 🌟</h2>
-              <p className="text-white/90 text-sm mb-4">
-                You've successfully completed your 5-minute mindfulness session. 
-                This dedication to your mental wellness is inspiring!
-              </p>
-              <p className="text-xs text-white/80">
-                +1 Mindfulness session logged • Keep up the great work!
-              </p>
-            </div>
-          </Card>
-        )}
       </Container>
     </Layout>
   );

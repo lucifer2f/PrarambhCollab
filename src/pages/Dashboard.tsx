@@ -6,16 +6,7 @@ import { RiskLevel, RiskLevelType } from '@/components/RiskLevel';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Heart, 
-  MessageCircle, 
-  Brain, 
-  BookOpen, 
-  Calendar,
-  Bell,
-  Users,
-  Activity
-} from 'lucide-react';
+import { Heart, MessageCircle, Brain, BookOpen, Calendar, Users } from 'lucide-react';
 
 export default function Dashboard() {
   const location = useLocation();
@@ -38,125 +29,91 @@ export default function Dashboard() {
     return 'Good evening';
   };
 
-  const getTodaysTasks = () => {
-    return [
-      { id: 1, title: '5-minute breathing exercise', completed: true, type: 'meditation' },
-      { id: 2, title: 'Mood check-in', completed: true, type: 'mood' },
-      { id: 3, title: 'Chat with MindPal', completed: false, type: 'chat' },
-      { id: 4, title: 'Evening reflection', completed: false, type: 'journal' },
-    ];
-  };
+  const getTodaysTasks = () => [
+    { id: 1, title: '5-minute breathing exercise', completed: true },
+    { id: 2, title: 'Mood check-in', completed: true },
+    { id: 3, title: 'Chat with MindPal', completed: false },
+    { id: 4, title: 'Evening reflection', completed: false },
+  ];
 
   return (
     <Layout background="gradient">
-      <Container className="max-w-4xl">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2">
-            {getWelcomeMessage()}, {userData.name || 'Friend'}! 👋
+      <Container className="max-w-3xl">
+        {/* Hierarchy: Welcome & Progress */}
+        <section className="mb-10 flex flex-col items-center text-center gap-3">
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-blue-600 via-blue-400 to-blue-600 bg-clip-text text-transparent drop-shadow-sm mb-1">
+            {getWelcomeMessage()}, {userData.name || 'Friend'}! <span role="img" aria-label="wave">👋</span>
           </h1>
-          <p className="text-muted-foreground">Let's make today a good day for your mental wellness</p>
-        </div>
+          <p className="text-lg text-gray-600 max-w-xl mx-auto leading-relaxed">
+            Let's make today a good day for your mental wellness.
+          </p>
+        </section>
 
-        {/* Current Risk Level */}
-        <div className="mb-8">
-          <RiskLevel level={riskLevel} showDescription className="shadow-gentle" />
-        </div>
-
-        {/* Daily Progress */}
-        <Card className="p-6 mb-8 shadow-soft border-0">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold flex items-center gap-2">
-              <Activity className="w-5 h-5" />
-              Today's Progress
-            </h2>
-            <Badge variant="secondary" className="bg-gradient-safe">
-              {dailyProgress}% Complete
+        {/* Progressive Disclosure: Risk Level */}
+        <Card className="mb-8 p-6 flex flex-col md:flex-row items-center gap-6 border-0 shadow-md rounded-2xl bg-white">
+          <RiskLevel level={riskLevel} />
+          <div className="flex-1 text-center md:text-left">
+            <h2 className="text-xl font-bold mb-1 text-gray-900">Your Current Wellness Level</h2>
+            <p className="text-gray-500 mb-2">
+              Based on your recent assessment, here's your current risk level.
+            </p>
+            <Badge variant="outline" className="text-base px-4 py-1 border-blue-400 text-blue-700 bg-blue-50">
+              Level {riskLevel}
             </Badge>
-          </div>
-          <Progress value={dailyProgress} className="mb-4" />
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {getTodaysTasks().map((task) => (
-              <div key={task.id} className="flex items-center gap-2">
-                <div className={`w-3 h-3 rounded-full ${
-                  task.completed ? 'bg-wellness-safe' : 'bg-muted'
-                }`} />
-                <span className={`text-sm ${
-                  task.completed ? 'text-muted-foreground line-through' : 'text-foreground'
-                }`}>
-                  {task.title}
-                </span>
-              </div>
-            ))}
           </div>
         </Card>
 
-        {/* Quick Actions */}
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
-          <Card className="p-6 shadow-soft border-0 hover:shadow-lg transition-shadow cursor-pointer"
-                onClick={() => navigate('/chat')}>
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 bg-gradient-primary rounded-2xl flex items-center justify-center">
-                <MessageCircle className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h3 className="font-semibold">Talk to MindPal</h3>
-                <p className="text-sm text-muted-foreground">Your AI companion is here</p>
-              </div>
-            </div>
-            <p className="text-sm text-muted-foreground mb-4">
-              "Hey there! How are you feeling today? I'm here to listen and support you. 💙"
-            </p>
-            <WellnessButton variant="outline" className="w-full">
-              Start Chatting
-            </WellnessButton>
-          </Card>
+        {/* Consistency & Contrast: Daily Progress */}
+        <Card className="mb-8 p-6 border-0 shadow-md rounded-2xl bg-white">
+          <h3 className="text-lg font-bold mb-3 text-gray-900">Today's Progress</h3>
+          <Progress value={dailyProgress} className="mb-2 bg-blue-100" />
+          <p className="text-gray-500 mb-2">{dailyProgress}% completed</p>
+        </Card>
 
-          <Card className="p-6 shadow-soft border-0 hover:shadow-lg transition-shadow cursor-pointer"
-                onClick={() => navigate('/meditation')}>
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 bg-gradient-safe rounded-2xl flex items-center justify-center">
-                <Brain className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h3 className="font-semibold">Guided Meditation</h3>
-                <p className="text-sm text-muted-foreground">5-minute focused session</p>
-              </div>
-            </div>
-            <p className="text-sm text-muted-foreground mb-4">
-              Take a few minutes to center yourself and find calm in the present moment.
-            </p>
-            <WellnessButton variant="secondary" className="w-full">
-              Start Session
-            </WellnessButton>
-          </Card>
+        {/* Proximity: Today's Tasks */}
+        <Card className="mb-8 p-6 border-0 shadow-md rounded-2xl bg-white">
+          <h3 className="text-lg font-bold mb-3 text-gray-900">Today's Tasks</h3>
+          <ul className="space-y-3">
+            {getTodaysTasks().map((task) => (
+              <li key={task.id} className="flex items-center gap-3">
+                <span className={`w-3 h-3 rounded-full ${task.completed ? 'bg-green-500' : 'bg-gray-300'}`} />
+                <span className={task.completed ? 'line-through text-gray-400' : 'text-gray-700'}>{task.title}</span>
+                {task.completed && <span className="ml-2 text-green-500">✔</span>}
+              </li>
+            ))}
+          </ul>
+        </Card>
+
+        {/* Alignment & Consistency: Quick Actions */}
+        <div className="grid md:grid-cols-4 gap-4 mb-8">
+          <WellnessButton onClick={() => navigate('/aichat')} className="w-full bg-blue-600 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-400">
+            <MessageCircle className="w-5 h-5 mr-2" /> Chat
+          </WellnessButton>
+          <WellnessButton onClick={() => navigate('/meditation-challenge')} className="w-full bg-green-500 text-white hover:bg-green-600 focus:ring-2 focus:ring-green-300">
+            <Brain className="w-5 h-5 mr-2" /> Meditate
+          </WellnessButton>
+          <WellnessButton variant="outline" className="w-full border-yellow-400 text-yellow-700 hover:bg-yellow-50 focus:ring-2 focus:ring-yellow-300">
+            <BookOpen className="w-5 h-5 mr-2" /> Journal
+          </WellnessButton>
+          <WellnessButton variant="outline" className="w-full border-orange-400 text-orange-700 hover:bg-orange-50 focus:ring-2 focus:ring-orange-300">
+            <Calendar className="w-5 h-5 mr-2" /> Plan
+          </WellnessButton>
         </div>
 
-        {/* Additional Resources */}
-        <div className="grid md:grid-cols-3 gap-4">
-          <Card className="p-4 shadow-gentle border-0 hover:shadow-soft transition-shadow cursor-pointer">
-            <BookOpen className="w-8 h-8 text-wellness-warm mb-3" />
-            <h4 className="font-semibold mb-2">Mood Journal</h4>
-            <p className="text-sm text-muted-foreground">Track your feelings and patterns</p>
-          </Card>
+        {/* Community Section */}
+        <Card className="p-6 border-0 shadow-md rounded-2xl bg-white mb-8">
+          <div className="flex items-center gap-4">
+            <Users className="w-8 h-8 text-blue-500" />
+            <div>
+              <h4 className="font-bold text-gray-900">Join the MindPal Community</h4>
+              <p className="text-gray-500 text-sm">Connect with others, share your journey, and find support.</p>
+            </div>
+          </div>
+        </Card>
 
-          <Card className="p-4 shadow-gentle border-0 hover:shadow-soft transition-shadow cursor-pointer">
-            <Calendar className="w-8 h-8 text-wellness-calm mb-3" />
-            <h4 className="font-semibold mb-2">Schedule Wellness</h4>
-            <p className="text-sm text-muted-foreground">Plan your self-care activities</p>
-          </Card>
-
-          <Card className="p-4 shadow-gentle border-0 hover:shadow-soft transition-shadow cursor-pointer">
-            <Users className="w-8 h-8 text-wellness-nature mb-3" />
-            <h4 className="font-semibold mb-2">Find Support</h4>
-            <p className="text-sm text-muted-foreground">Connect with professionals</p>
-          </Card>
-        </div>
-
-        {/* Emergency Notice for High Risk */}
+        {/* Accessibility: Emergency Notice for High Risk */}
         {riskLevel >= 4 && (
-          <Card className="p-6 mt-8 shadow-warm border-0 bg-gradient-warm">
+          <Card className="p-6 mt-8 shadow-lg border-0 bg-gradient-to-r from-orange-400 to-red-400">
             <div className="flex items-center gap-4">
               <Heart className="w-8 h-8 text-white" />
               <div className="flex-1">
