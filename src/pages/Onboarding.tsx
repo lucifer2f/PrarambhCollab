@@ -8,15 +8,42 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { useNavigate } from 'react-router-dom';
 import { Heart, Clock, Shield, Phone } from 'lucide-react';
+import { createUser, getAuthUserId } from '../lib/database';
 
 export default function Onboarding() {
+  // Wellness assessment questions
+  const wellnessQuestions = [
+    {
+      key: 'phq9Score',
+      question: 'How often have you felt down or hopeless recently?',
+      options: [
+        { value: 0, label: 'Not at all' },
+        { value: 5, label: 'Several days' },
+        { value: 10, label: 'More than half the days' },
+        { value: 15, label: 'Nearly every day' },
+      ],
+    },
+    {
+      key: 'gad7Score',
+      question: 'How often do you feel anxious or worried?',
+      options: [
+        { value: 0, label: 'Not at all' },
+        { value: 5, label: 'Several days' },
+        { value: 10, label: 'More than half the days' },
+        { value: 15, label: 'Nearly every day' },
+      ],
+    },
+    // Add more questions here as needed
+  ];
+  const [wellnessStep, setWellnessStep] = useState(0);
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     name: '',
     role: '',
     workingHours: '',
-    freeTime: '',
+    freeTimeFrom: '',
+    freeTimeTo: '',
     emergencyContact: '',
     emergencyName: '',
     phq9Score: 0,
@@ -25,6 +52,11 @@ export default function Onboarding() {
     safetyRisk: false
   });
   const [nameError, setNameError] = useState('');
+  const [workingHoursError, setWorkingHoursError] = useState('');
+  const [freeTimeError, setFreeTimeError] = useState('');
+  const [emergencyNameError, setEmergencyNameError] = useState('');
+  const [emergencyContactError, setEmergencyContactError] = useState('');
+  const [createdUserId, setCreatedUserId] = useState<string | null>(null);
 
   const handleNext = () => {
     if (step < 4) {
@@ -59,6 +91,18 @@ export default function Onboarding() {
       </div>
     </div>
   );
+
+  async function handleCreate(e: React.FormEvent) {
+    e.preventDefault();
+    // create user row (will try to use auth ID if present)
+    const user = await createUser({ name: formData.name, role: formData.role, free_time: formData.freeTimeFrom + '-' + formData.freeTimeTo });
+    if (user?.id) {
+      setCreatedUserId(user.id);
+      // store locally for quick access in other pages
+      localStorage.setItem('app_user_id', user.id);
+      console.log('User row created:', user);
+    }
+  }
 
   return (
     <Layout background="gradient">
@@ -141,28 +185,76 @@ export default function Onboarding() {
                 <Input
                   id="workingHours"
                   type="number"
+                  min={1}
+                  max={12}
                   value={formData.workingHours}
-                  onChange={(e) => setFormData({...formData, workingHours: e.target.value})}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === '' || (Number(value) >= 1 && Number(value) <= 12)) {
+                      setFormData({ ...formData, workingHours: value });
+                      setWorkingHoursError('');
+                    } else {
+                      setWorkingHoursError('Working hours must be between 1 and 12');
+                    }
+                  }}
                   placeholder="e.g., 8"
                   className="mt-2"
                 />
+                {workingHoursError && (
+                  <span className="text-destructive text-sm">{workingHoursError}</span>
+                )}
               </div>
-              
               <div>
-                <Label htmlFor="freeTime">When are your typical free time slots?</Label>
-                <Textarea
-                  id="freeTime"
-                  value={formData.freeTime}
-                  onChange={(e) => setFormData({...formData, freeTime: e.target.value})}
-                  placeholder="e.g., Morning 7-9 AM, Evening 6-8 PM"
-                  className="mt-2"
-                />
+                <Label>When are your typical free time slots?</Label>
+                <div className="flex gap-4 mt-2">
+                  <div>
+                    <Label htmlFor="freeTimeFrom">From</Label>
+                    <Input
+                      id="freeTimeFrom"
+                      type="time"
+                      value={formData.freeTimeFrom}
+                      onChange={(e) => {
+                        setFormData({ ...formData, freeTimeFrom: e.target.value });
+                        setFreeTimeError('');
+                      }}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="freeTimeTo">To</Label>
+                    <Input
+                      id="freeTimeTo"
+                      type="time"
+                      value={formData.freeTimeTo}
+                      onChange={(e) => {
+                        setFormData({ ...formData, freeTimeTo: e.target.value });
+                        setFreeTimeError('');
+                      }}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+                {freeTimeError && (
+                  <span className="text-destructive text-sm">{freeTimeError}</span>
+                )}
               </div>
             </div>
             
             <WellnessButton 
-              onClick={handleNext}
-              disabled={!formData.workingHours || !formData.freeTime}
+              onClick={() => {
+                // Validate that from < to
+                if (formData.freeTimeFrom && formData.freeTimeTo && formData.freeTimeFrom >= formData.freeTimeTo) {
+                  setFreeTimeError('Start time must be before end time');
+                  return;
+                }
+                setFreeTimeError('');
+                handleNext();
+              }}
+              disabled={
+                !formData.workingHours ||
+                !formData.freeTimeFrom ||
+                !formData.freeTimeTo
+              }
               className="w-full mt-8"
             >
               Continue
@@ -183,23 +275,47 @@ export default function Onboarding() {
                 <Label htmlFor="emergencyName">Contact person's name</Label>
                 <Input
                   id="emergencyName"
+                  type="text"
                   value={formData.emergencyName}
-                  onChange={(e) => setFormData({...formData, emergencyName: e.target.value})}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (/^[a-zA-Z ]*$/.test(value)) {
+                      setFormData({ ...formData, emergencyName: value });
+                      setEmergencyNameError('');
+                    } else {
+                      setEmergencyNameError('Name must contain only letters and spaces');
+                    }
+                  }}
                   placeholder="Family member or close friend"
                   className="mt-2"
                 />
+                {emergencyNameError && (
+                  <span className="text-destructive text-sm">{emergencyNameError}</span>
+                )}
               </div>
-              
               <div>
                 <Label htmlFor="emergencyContact">Their phone number</Label>
                 <Input
                   id="emergencyContact"
                   type="tel"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={formData.emergencyContact}
-                  onChange={(e) => setFormData({...formData, emergencyContact: e.target.value})}
-                  placeholder="+1 (555) 123-4567"
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (/^\d*$/.test(value)) {
+                      setFormData({ ...formData, emergencyContact: value });
+                      setEmergencyContactError('');
+                    } else {
+                      setEmergencyContactError('Phone number must contain only numbers');
+                    }
+                  }}
+                  placeholder="Phone number"
                   className="mt-2"
                 />
+                {emergencyContactError && (
+                  <span className="text-destructive text-sm">{emergencyContactError}</span>
+                )}
               </div>
               
               <div className="bg-muted/30 p-4 rounded-xl">
@@ -227,65 +343,49 @@ export default function Onboarding() {
               <h2 className="text-2xl font-bold mb-2">Wellness Assessment</h2>
               <p className="text-muted-foreground">Quick questions to understand how you're feeling</p>
             </div>
-            
             <div className="space-y-6">
               <div className="bg-gradient-safe p-6 rounded-xl">
-                <h3 className="font-semibold mb-4">How often have you felt down or hopeless recently?</h3>
+                <h3 className="font-semibold mb-4">{wellnessQuestions[wellnessStep].question}</h3>
                 <RadioGroup
-                  value={formData.phq9Score.toString()}
-                  onValueChange={(value) => setFormData({...formData, phq9Score: parseInt(value)})}
+                  value={formData[wellnessQuestions[wellnessStep].key]?.toString() || ''}
+                  onValueChange={(value) => {
+                    setFormData({
+                      ...formData,
+                      [wellnessQuestions[wellnessStep].key]: parseInt(value),
+                    });
+                  }}
                 >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="0" id="phq0" />
-                    <Label htmlFor="phq0">Not at all</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="5" id="phq5" />
-                    <Label htmlFor="phq5">Several days</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="10" id="phq10" />
-                    <Label htmlFor="phq10">More than half the days</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="15" id="phq15" />
-                    <Label htmlFor="phq15">Nearly every day</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-
-              <div className="bg-gradient-safe p-6 rounded-xl">
-                <h3 className="font-semibold mb-4">How often do you feel anxious or worried?</h3>
-                <RadioGroup
-                  value={formData.gad7Score.toString()}
-                  onValueChange={(value) => setFormData({...formData, gad7Score: parseInt(value)})}
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="0" id="gad0" />
-                    <Label htmlFor="gad0">Not at all</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="5" id="gad5" />
-                    <Label htmlFor="gad5">Several days</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="10" id="gad10" />
-                    <Label htmlFor="gad10">More than half the days</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="15" id="gad15" />
-                    <Label htmlFor="gad15">Nearly every day</Label>
-                  </div>
+                  {wellnessQuestions[wellnessStep].options.map((opt) => (
+                    <div className="flex items-center space-x-2" key={opt.value}>
+                      <RadioGroupItem value={opt.value.toString()} id={wellnessQuestions[wellnessStep].key + opt.value} />
+                      <Label htmlFor={wellnessQuestions[wellnessStep].key + opt.value}>{opt.label}</Label>
+                    </div>
+                  ))}
                 </RadioGroup>
               </div>
             </div>
-            
-            <WellnessButton 
-              onClick={handleNext}
-              className="w-full mt-8"
-            >
-              Complete Assessment
-            </WellnessButton>
+            <div className="flex justify-between mt-8">
+              {wellnessStep > 0 && (
+                <WellnessButton onClick={() => setWellnessStep(wellnessStep - 1)}>
+                  Previous
+                </WellnessButton>
+              )}
+              {wellnessStep < wellnessQuestions.length - 1 ? (
+                <WellnessButton
+                  onClick={() => setWellnessStep(wellnessStep + 1)}
+                  disabled={formData[wellnessQuestions[wellnessStep].key] === undefined || formData[wellnessQuestions[wellnessStep].key] === ''}
+                >
+                  Next
+                </WellnessButton>
+              ) : (
+                <WellnessButton
+                  onClick={handleNext}
+                  disabled={formData[wellnessQuestions[wellnessStep].key] === undefined || formData[wellnessQuestions[wellnessStep].key] === ''}
+                >
+                  Complete Assessment
+                </WellnessButton>
+              )}
+            </div>
           </Card>
         )}
       </Container>

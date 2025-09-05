@@ -7,6 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Send, Heart, AlertTriangle } from 'lucide-react';
+import { saveInteraction, getInteractions } from '../lib/database';
 
 interface Message {
   id: string;
@@ -29,6 +30,10 @@ export default function AIChat() {
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [userId] = useState<string | null>(localStorage.getItem("app_user_id"));
+  const [question, setQuestion] = useState("");
+  const [answer, setAnswer] = useState("");
+  const [history, setHistory] = useState<any[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -38,6 +43,15 @@ export default function AIChat() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    if (userId) {
+      (async () => {
+        const rows = await getInteractions(userId);
+        setHistory(rows);
+      })();
+    }
+  }, [userId]);
 
   const generateAIResponse = (userMessage: string): Message => {
     const lowerMessage = userMessage.toLowerCase();
@@ -109,6 +123,18 @@ export default function AIChat() {
       handleSendMessage();
     }
   };
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!userId) return alert("Create a user first (Onboarding).");
+    // Save the Q&A pair
+    await saveInteraction(userId, question, answer);
+    setQuestion("");
+    setAnswer("");
+    // refresh list
+    const rows = await getInteractions(userId);
+    setHistory(rows);
+  }
 
   return (
     <Layout background="gradient">
@@ -229,6 +255,25 @@ export default function AIChat() {
             <AlertTriangle className="w-3 h-3 inline mr-1" />
             MindPal provides support but not medical advice. In crisis, contact 988 or your local emergency services.
           </p>
+        </div>
+
+        {/* History Section - Moved here for better structure */}
+        <div className="mt-6">
+          <h3 className="text-lg font-semibold mb-4">Chat History</h3>
+          <Card className="p-4 shadow-soft border-0">
+            <ScrollArea className="h-60">
+              <ul className="space-y-2">
+                {history.map((h) => (
+                  <li key={h.id} className="flex gap-2">
+                    <div className="flex-1 rounded-2xl px-4 py-2 bg-muted">
+                      <p className="text-sm font-medium">{h.question}</p>
+                      <p className="text-sm text-muted-foreground">{h.answer}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </ScrollArea>
+          </Card>
         </div>
       </Container>
     </Layout>
